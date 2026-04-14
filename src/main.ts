@@ -26,8 +26,8 @@ async function initApp() {
   footer.className = 'footer';
   footer.innerHTML = `
     <div class="footer__inner">
-      <p class="footer__text">© ${new Date().getFullYear()} SawaVote — Built by <a href="https://sawacode.com" target="_blank" rel="noopener" class="footer__link">SawaCode</a></p>
-      <p class="footer__tagline">One person. One vote. Every day.</p>
+      <p class="footer__text">© ${new Date().getFullYear()} LION DYNASTY — Media & Creative Arts</p>
+      <p class="footer__tagline">Recognizing the lions in art, dance, and drama.</p>
     </div>
   `;
   app.appendChild(footer);

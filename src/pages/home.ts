@@ -15,14 +15,14 @@ export async function renderHomePage(container: HTMLElement) {
     hero.className = 'hero';
     hero.innerHTML = `
       <div class="hero__content">
-        <span class="hero__badge">🏆 Season 1 — Live Now</span>
+        <span class="hero__badge">🦁 The Lion Era — Season 1</span>
         <h1 class="hero__title">
-          Vote for Your
-          <span class="hero__title-accent">Favorite Stars</span>
+          Celebrate the
+          <span class="hero__title-accent">Creative Lions</span>
         </h1>
         <p class="hero__subtitle">
-          Choose the best in music, comedy, film, sports and more.
-          One vote per category, every 24 hours. Sign in with Google to make your voice heard.
+          The definitive stage for Art, Dance, and Drama. 
+          Support your favorite creators and help them claim their place in the dynasty.
         </p>
         <div class="hero__stats">
           <div class="hero__stat">

@@ -168,7 +168,7 @@ function launchConfetti() {
     color: string; size: number; rotation: number; rotationSpeed: number;
   }> = [];
 
-  const colors = ['#7c3aed', '#06b6d4', '#f59e0b', '#ef4444', '#10b981', '#ec4899'];
+  const colors = ['#ff0080', '#ff8c00', '#00f2ff', '#00ffa3', '#ff3d00', '#7c3aed'];
   for (let i = 0; i < 80; i++) {
     particles.push({
       x: Math.random() * canvas.width,
