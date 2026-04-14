@@ -5,12 +5,13 @@ import {
   castVote,
 } from '../api';
 import type { Category, Candidate } from '../api';
-import { getCurrentUser } from '../auth';
+import { getCurrentUser, signInWithGoogle } from '../auth';
 import { createCandidateCard } from '../components/candidate-card';
 import { createCountdown } from '../components/countdown';
 import { showPageLoader } from '../components/loader';
 import { showToast } from '../components/toast';
 import { navigate } from '../router';
+import confetti from 'canvas-confetti';
 
 export async function renderCategoryPage(container: HTMLElement, slug: string) {
   showPageLoader(container);
@@ -103,7 +104,13 @@ export async function renderCategoryPage(container: HTMLElement, slug: string) {
         votedCandidateId: userVote?.candidate_id,
         onVote: async (candidateId: string) => {
           if (!user) {
-            showToast('Please sign in with Google first', 'error');
+            // Trigger sign-in for unauthenticated users as requested
+            try {
+              await signInWithGoogle();
+            } catch (err) {
+              showToast('Sign-in failed. Please try again.', 'error');
+              console.error(err);
+            }
             return;
           }
 
@@ -116,11 +123,11 @@ export async function renderCategoryPage(container: HTMLElement, slug: string) {
           try {
             const result = await castVote(candidateId, category.id);
             if (result.success) {
-              showToast(`You voted for ${candidate.name}! 🎉`, 'success');
-              // Trigger confetti
+              // Celebrate!
               launchConfetti();
-              // Re-render page to show updated state
-              setTimeout(() => renderCategoryPage(container, slug), 1500);
+              
+              // Transition to success state
+              renderSuccessState(container, candidate.name);
             } else {
               showToast(result.error || 'Vote failed', 'error');
               if (btn) {
@@ -155,56 +162,48 @@ export async function renderCategoryPage(container: HTMLElement, slug: string) {
   }
 }
 
+function renderSuccessState(container: HTMLElement, candidateName: string) {
+  container.innerHTML = `
+    <div class="success-card">
+      <span class="success-card__icon">🎉</span>
+      <h1 class="success-card__title">Vote Recorded!</h1>
+      <p class="success-card__message">You successfully cast your vote for <strong>${candidateName}</strong>. Your choice matters in the Lion Dynasty!</p>
+      
+      <div class="success-card__reminder">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        Ready to vote again in 24 hours
+      </div>
+
+      <button class="btn btn--primary success-card__btn" id="success-done-btn">Back to Categories</button>
+    </div>
+  `;
+
+  container.querySelector('#success-done-btn')?.addEventListener('click', () => {
+    navigate('/');
+  });
+}
+
 function launchConfetti() {
-  const canvas = document.createElement('canvas');
-  canvas.className = 'confetti-canvas';
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  document.body.appendChild(canvas);
+  const duration = 3 * 1000;
+  const animationEnd = Date.now() + duration;
+  const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
 
-  const ctx = canvas.getContext('2d')!;
-  const particles: Array<{
-    x: number; y: number; vx: number; vy: number;
-    color: string; size: number; rotation: number; rotationSpeed: number;
-  }> = [];
-
-  const colors = ['#ff0080', '#ff8c00', '#00f2ff', '#00ffa3', '#ff3d00', '#7c3aed'];
-  for (let i = 0; i < 80; i++) {
-    particles.push({
-      x: Math.random() * canvas.width,
-      y: -20 - Math.random() * 100,
-      vx: (Math.random() - 0.5) * 8,
-      vy: Math.random() * 6 + 2,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      size: Math.random() * 8 + 4,
-      rotation: Math.random() * Math.PI * 2,
-      rotationSpeed: (Math.random() - 0.5) * 0.2,
-    });
+  function randomInRange(min: number, max: number) {
+    return Math.random() * (max - min) + min;
   }
 
-  let frame = 0;
-  function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += 0.1;
-      p.rotation += p.rotationSpeed;
+  const interval: any = setInterval(function() {
+    const timeLeft = animationEnd - Date.now();
 
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rotation);
-      ctx.fillStyle = p.color;
-      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
-      ctx.restore();
-    });
-
-    frame++;
-    if (frame < 120) {
-      requestAnimationFrame(animate);
-    } else {
-      canvas.remove();
+    if (timeLeft <= 0) {
+      return clearInterval(interval);
     }
-  }
-  animate();
+
+    const particleCount = 50 * (timeLeft / duration);
+    // since particles fall down, start a bit higher than random
+    confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+    confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+  }, 250);
 }
