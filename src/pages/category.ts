@@ -176,6 +176,21 @@ function renderSuccessState(container: HTMLElement, candidateName: string) {
         Ready to vote again in 24 hours
       </div>
 
+      <div class="success-card__share-group">
+        <a href="https://wa.me/?text=${encodeURIComponent(`I just voted for ${candidateName} on Lion Dynasty. Vote here: ${window.location.origin}`)}" 
+           target="_blank" 
+           rel="noopener noreferrer" 
+           class="btn btn--whatsapp">
+          WhatsApp
+        </a>
+        <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}" 
+           target="_blank" 
+           rel="noopener noreferrer" 
+           class="btn btn--facebook">
+          Facebook
+        </a>
+      </div>
+
       <button class="btn btn--primary success-card__btn" id="success-done-btn">Back to Categories</button>
     </div>
   `;

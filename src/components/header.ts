@@ -20,7 +20,7 @@ function renderHeader(header: HTMLElement, user: User | null) {
   header.innerHTML = `
     <div class="header__inner">
       <a href="#/" class="header__logo" id="logo-link">
-        <span class="header__logo-icon">🦁</span>
+        <span class="header__logo-icon"></span>
         <span class="header__logo-text">LION DYNASTY</span>
       </a>
       <nav class="header__nav">

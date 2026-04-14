@@ -296,6 +296,40 @@ button {
 
 .hero__content {
   position: relative;
+  z-index: 2;
+}
+
+.hero__countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-lg);
+  animation: fadeInDown 0.8s ease-out;
+}
+
+.hero__countdown-label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.hero__countdown-value {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-accent);
+  font-size: 0.95rem;
+}
+
+.hero__countdown--ended .hero__countdown-label {
+  color: #ef4444;
 }
 
 .hero__badge {
@@ -1051,6 +1085,40 @@ button {
   font-weight: 600;
   font-size: 0.95rem;
   margin-bottom: var(--space-xl);
+}
+
+.success-card__share-group {
+  display: flex;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.btn--whatsapp {
+  background: #25D366;
+  color: white;
+  flex: 1;
+  text-decoration: none;
+  justify-content: center;
+}
+
+.btn--whatsapp:hover {
+  background: #22bf5c;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn--facebook {
+  background: #1877F2;
+  color: white;
+  flex: 1;
+  text-decoration: none;
+  justify-content: center;
+}
+
+.btn--facebook:hover {
+  background: #166fe5;
+  box-shadow: 0 4px 12px rgba(24, 119, 242, 0.3);
+  transform: translateY(-1px);
 }
 
 .success-card__btn {

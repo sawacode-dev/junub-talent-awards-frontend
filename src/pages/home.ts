@@ -1,4 +1,4 @@
-import { fetchCategories } from '../api';
+import { fetchCategories, fetchGlobalStats, fetchSettings } from '../api';
 import type { Category } from '../api';
 import { showPageLoader } from '../components/loader';
 import { navigate } from '../router';
@@ -7,15 +7,40 @@ export async function renderHomePage(container: HTMLElement) {
   showPageLoader(container);
 
   try {
-    const categories = await fetchCategories();
+    const [categories, globalStats, settings] = await Promise.all([
+      fetchCategories(),
+      fetchGlobalStats(),
+      fetchSettings()
+    ]);
     container.innerHTML = '';
 
     // Hero section
     const hero = document.createElement('section');
     hero.className = 'hero';
+    
+    // Countdown logic
+    let countdownHtml = '';
+    if (settings && settings.election_end) {
+      const endDate = new Date(settings.election_end);
+      if (endDate > new Date()) {
+        countdownHtml = `
+          <div class="hero__countdown" id="hero-countdown">
+            <span class="hero__countdown-label">Voting Closes In:</span>
+            <span class="hero__countdown-value" id="deadline-timer">--:--:--</span>
+          </div>
+        `;
+      } else {
+        countdownHtml = `
+          <div class="hero__countdown hero__countdown--ended">
+            <span class="hero__countdown-label">Voting has ended</span>
+          </div>
+        `;
+      }
+    }
+
     hero.innerHTML = `
       <div class="hero__content">
-        <span class="hero__badge">🦁 The Lion Era — Season 1</span>
+        ${countdownHtml}
         <h1 class="hero__title">
           Celebrate the
           <span class="hero__title-accent">Creative Lions</span>
@@ -26,11 +51,11 @@ export async function renderHomePage(container: HTMLElement) {
         </p>
         <div class="hero__stats">
           <div class="hero__stat">
-            <span class="hero__stat-value">${categories.length}</span>
+            <span class="hero__stat-value">${globalStats.categories}</span>
             <span class="hero__stat-label">Categories</span>
           </div>
           <div class="hero__stat">
-            <span class="hero__stat-value">20</span>
+            <span class="hero__stat-value">${globalStats.candidates}</span>
             <span class="hero__stat-label">Celebrities</span>
           </div>
           <div class="hero__stat">
@@ -41,6 +66,34 @@ export async function renderHomePage(container: HTMLElement) {
       </div>
     `;
     container.appendChild(hero);
+
+    // Initialize countdown timer
+    if (settings && settings.election_end) {
+      const timerEl = hero.querySelector('#deadline-timer');
+      if (timerEl) {
+        const endDate = new Date(settings.election_end).getTime();
+        const updateTimer = () => {
+          const now = new Date().getTime();
+          const diff = endDate - now;
+          if (diff <= 0) {
+            timerEl.textContent = 'Closed';
+            return;
+          }
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          
+          if (days > 0) {
+            timerEl.textContent = `${days}d ${hours}h ${mins}m`;
+          } else {
+            const secs = Math.floor((diff % (1000 * 60)) / 1000);
+            timerEl.textContent = `${hours}h ${mins}m ${secs}s`;
+          }
+        };
+        updateTimer();
+        setInterval(updateTimer, 1000);
+      }
+    }
 
     // Categories grid
     const section = document.createElement('section');

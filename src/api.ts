@@ -98,3 +98,36 @@ export async function fetchLeaderboard(): Promise<(Candidate & { category_name: 
     category_name: c.categories?.name ?? 'Unknown',
   }));
 }
+
+export interface Settings {
+  election_start: string | null;
+  election_end: string | null;
+  is_paused: boolean;
+  public_message: string | null;
+}
+
+export async function fetchGlobalStats() {
+  const [
+    { count: catCount },
+    { count: candCount }
+  ] = await Promise.all([
+    supabase.from('categories').select('*', { count: 'exact', head: true }).eq('is_active', true),
+    supabase.from('candidates').select('*', { count: 'exact', head: true }).eq('is_active', true)
+  ]);
+
+  return {
+    categories: catCount || 0,
+    candidates: candCount || 0
+  };
+}
+
+export async function fetchSettings(): Promise<Settings | null> {
+  const { data, error } = await supabase
+    .from('settings')
+    .select('*')
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
