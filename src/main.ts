@@ -26,8 +26,8 @@ async function initApp() {
   footer.className = 'footer';
   footer.innerHTML = `
     <div class="footer__inner">
-      <p class="footer__text">© ${new Date().getFullYear()} LION DYNASTY — Media & Creative Arts</p>
-      <p class="footer__tagline">Recognizing the lions in art, dance, and drama.</p>
+      <p class="footer__text">© ${new Date().getFullYear()} Junub Talent Awards</p>
+      <p class="footer__tagline">Celebrating excellence in art, dance, and drama.</p>
     </div>
   `;
   app.appendChild(footer);

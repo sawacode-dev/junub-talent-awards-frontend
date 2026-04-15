@@ -167,7 +167,7 @@ function renderSuccessState(container: HTMLElement, candidateName: string) {
     <div class="success-card">
       <span class="success-card__icon">🎉</span>
       <h1 class="success-card__title">Vote Recorded!</h1>
-      <p class="success-card__message">You successfully cast your vote for <strong>${candidateName}</strong>. Your choice matters in the Lion Dynasty!</p>
+      <p class="success-card__message">You successfully cast your vote for <strong>${candidateName}</strong>. Your vote has been recorded for the Junub Talent Awards.</p>
       
       <div class="success-card__reminder">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -177,7 +177,7 @@ function renderSuccessState(container: HTMLElement, candidateName: string) {
       </div>
 
       <div class="success-card__share-group">
-        <a href="https://wa.me/?text=${encodeURIComponent(`I just voted for ${candidateName} on Lion Dynasty. Vote here: ${window.location.origin}`)}" 
+        <a href="https://wa.me/?text=${encodeURIComponent(`I just voted for ${candidateName} at the Junub Talent Awards. Cast your vote here: ${window.location.origin}`)}" 
            target="_blank" 
            rel="noopener noreferrer" 
            class="btn btn--whatsapp">

@@ -43,11 +43,11 @@ export async function renderHomePage(container: HTMLElement) {
         ${countdownHtml}
         <h1 class="hero__title">
           Celebrate the
-          <span class="hero__title-accent">Creative Lions</span>
+          <span class="hero__title-accent">Outstanding Talent</span>
         </h1>
         <p class="hero__subtitle">
-          The definitive stage for Art, Dance, and Drama. 
-          Support your favorite creators and help them claim their place in the dynasty.
+          The official platform for the Junub Talent Awards. 
+          Vote for the nominees who inspire you across art, dance, and drama.
         </p>
         <div class="hero__stats">
           <div class="hero__stat">
@@ -56,7 +56,7 @@ export async function renderHomePage(container: HTMLElement) {
           </div>
           <div class="hero__stat">
             <span class="hero__stat-value">${globalStats.candidates}</span>
-            <span class="hero__stat-label">Celebrities</span>
+            <span class="hero__stat-label">Nominees</span>
           </div>
           <div class="hero__stat">
             <span class="hero__stat-value">24h</span>

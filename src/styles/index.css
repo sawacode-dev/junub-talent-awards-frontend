@@ -1,7 +1,7 @@
 /* ============================================
-   LION DYNASTY — Design System
+   JUNUB TALENT AWARDS — Design System
    Theme: Vibrant creative with Pink→Orange gradients
-   Typography: Inter (body) + Outfit (headings)
+   Typography: DM Sans (body) + Sora (headings)
    ============================================ */
 
 /* --- CSS Custom Properties --- */
@@ -33,8 +33,8 @@
   --color-info: #00f2ff;
 
   /* Typography */
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-heading: 'Outfit', 'Inter', sans-serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-heading: 'Sora', 'DM Sans', sans-serif;
 
   /* Spacing */
   --space-xs: 0.25rem;
