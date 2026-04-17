@@ -41,6 +41,7 @@ function renderHeader(header: HTMLElement, user: User | null) {
               />
               <span class="header__user-name">${user.user_metadata?.full_name || user.email}</span>
               
+              <div class="mobile-backdrop" id="mobile-backdrop"></div>
               <div class="profile-dropdown" id="profile-dropdown">
                 <div class="profile-dropdown__header">
                   <strong>${user.user_metadata?.full_name || 'Voter'}</strong>
@@ -60,7 +61,7 @@ function renderHeader(header: HTMLElement, user: User | null) {
             </div>
           `
           : `
-            <button class="header__btn header__btn--login mobile-hide" id="btn-signin">
+            <button class="header__btn header__btn--login" id="btn-signin">
               <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -102,19 +103,27 @@ function renderHeader(header: HTMLElement, user: User | null) {
   // Profile dropdown toggle
   const userMenu = header.querySelector('#user-profile-menu');
   const dropdown = header.querySelector('#profile-dropdown');
+  const backdrop = header.querySelector('#mobile-backdrop');
   
   if (userMenu && dropdown) {
     userMenu.addEventListener('click', (e) => {
       // Don't toggle if clicking the dropdown contents
       if ((e.target as HTMLElement).closest('.profile-dropdown')) return;
       dropdown.classList.toggle('profile-dropdown--open');
+      backdrop?.classList.toggle('mobile-backdrop--visible');
     });
 
-    // Close on click outside
+    // Close on click outside or backdrop tap
     document.addEventListener('click', (e) => {
       if (!userMenu.contains(e.target as Node)) {
         dropdown.classList.remove('profile-dropdown--open');
+        backdrop?.classList.remove('mobile-backdrop--visible');
       }
+    });
+
+    backdrop?.addEventListener('click', () => {
+        dropdown.classList.remove('profile-dropdown--open');
+        backdrop.classList.remove('mobile-backdrop--visible');
     });
   }
 
