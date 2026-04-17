@@ -111,7 +111,7 @@ export async function renderCategoryPage(container: HTMLElement, slug: string) {
           candidate,
           rank: index + 1,
           hasVoted,
-          votedCandidateId: userVote?.candidate_id,
+          votedCandidateId: hasVoted ? userVote?.candidate_id : undefined,
           onVote: async (candidateId: string) => {
             if (!user) {
               // Trigger sign-in for unauthenticated users as requested
