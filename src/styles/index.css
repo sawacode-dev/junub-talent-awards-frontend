@@ -158,6 +158,7 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-lg);
+  flex-wrap: nowrap;
 }
 
 .header__logo {
@@ -1168,6 +1169,18 @@ button {
 
   .header__inner {
     padding: 0 var(--space-md);
+    gap: var(--space-sm);
+  }
+
+  .header__logo {
+    max-width: calc(100vw - 180px);
+  }
+
+  .header__logo-text {
+    font-size: 1.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .header__user-name {

@@ -93,62 +93,73 @@ export async function renderCategoryPage(container: HTMLElement, slug: string) {
     }
 
     // Candidates grid
-    const grid = document.createElement('div');
-    grid.className = 'candidates-grid';
+    if (candidates.length === 0) {
+      const emptyState = document.createElement('div');
+      emptyState.className = 'empty-state';
+      emptyState.innerHTML = `
+        <span class="empty-state__icon">📭</span>
+        <h2>No Candidates Yet</h2>
+        <p>There are currently no nominees for this category. Check back soon!</p>
+      `;
+      container.appendChild(emptyState);
+    } else {
+      const grid = document.createElement('div');
+      grid.className = 'candidates-grid';
 
-    candidates.forEach((candidate: Candidate, index: number) => {
-      const card = createCandidateCard({
-        candidate,
-        rank: index + 1,
-        hasVoted,
-        votedCandidateId: userVote?.candidate_id,
-        onVote: async (candidateId: string) => {
-          if (!user) {
-            // Trigger sign-in for unauthenticated users as requested
-            try {
-              await signInWithGoogle();
-            } catch (err) {
-              showToast('Sign-in failed. Please try again.', 'error');
-              console.error(err);
+      candidates.forEach((candidate: Candidate, index: number) => {
+        const card = createCandidateCard({
+          candidate,
+          rank: index + 1,
+          hasVoted,
+          votedCandidateId: userVote?.candidate_id,
+          onVote: async (candidateId: string) => {
+            if (!user) {
+              // Trigger sign-in for unauthenticated users as requested
+              try {
+                await signInWithGoogle();
+              } catch (err) {
+                showToast('Sign-in failed. Please try again.', 'error');
+                console.error(err);
+              }
+              return;
             }
-            return;
-          }
 
-          const btn = card.querySelector(`#vote-btn-${candidateId}`) as HTMLButtonElement;
-          if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<span class="btn-spinner"></span> Voting...';
-          }
+            const btn = card.querySelector(`#vote-btn-${candidateId}`) as HTMLButtonElement;
+            if (btn) {
+              btn.disabled = true;
+              btn.innerHTML = '<span class="btn-spinner"></span> Voting...';
+            }
 
-          try {
-            const result = await castVote(candidateId, category.id);
-            if (result.success) {
-              // Celebrate!
-              launchConfetti();
-              
-              // Transition to success state
-              renderSuccessState(container, candidate.name);
-            } else {
-              showToast(result.error || 'Vote failed', 'error');
+            try {
+              const result = await castVote(candidateId, category.id);
+              if (result.success) {
+                // Celebrate!
+                launchConfetti();
+                
+                // Transition to success state
+                renderSuccessState(container, candidate.name);
+              } else {
+                showToast(result.error || 'Vote failed', 'error');
+                if (btn) {
+                  btn.disabled = false;
+                  btn.innerHTML = '<span>🗳️</span> Cast Vote';
+                }
+              }
+            } catch (err) {
+              showToast('Failed to cast vote. Please try again.', 'error');
               if (btn) {
                 btn.disabled = false;
                 btn.innerHTML = '<span>🗳️</span> Cast Vote';
               }
+              console.error(err);
             }
-          } catch (err) {
-            showToast('Failed to cast vote. Please try again.', 'error');
-            if (btn) {
-              btn.disabled = false;
-              btn.innerHTML = '<span>🗳️</span> Cast Vote';
-            }
-            console.error(err);
-          }
-        },
+          },
+        });
+        grid.appendChild(card);
       });
-      grid.appendChild(card);
-    });
 
-    container.appendChild(grid);
+      container.appendChild(grid);
+    }
   } catch (err) {
     container.innerHTML = `
       <div class="error-state">
