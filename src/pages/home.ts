@@ -109,9 +109,9 @@ export async function renderHomePage(container: HTMLElement) {
       card.id = `category-${cat.slug}`;
       card.style.animationDelay = `${index * 0.1}s`;
       card.innerHTML = `
-        <div class="category-card__icon">${cat.icon}</div>
+        <div class="category-card__icon">${cat.icon || '🏆'}</div>
         <h3 class="category-card__name">${cat.name}</h3>
-        <p class="category-card__desc">${cat.description}</p>
+        <p class="category-card__desc">${cat.description || ''}</p>
         <span class="category-card__arrow">→</span>
       `;
       card.addEventListener('click', () => navigate(`/category/${cat.slug}`));

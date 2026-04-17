@@ -31,7 +31,7 @@ export async function signInWithGoogle() {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.href, // redirect back to the contextual page
+      redirectTo: window.location.origin,
     },
   });
   if (error) throw error;

@@ -64,10 +64,10 @@ export async function renderCategoryPage(container: HTMLElement, slug: string) {
         Back
       </button>
       <div class="page-header__title-group">
-        <span class="page-header__icon">${category.icon}</span>
+        <span class="page-header__icon">${category.icon || '🏆'}</span>
         <h1 class="page-header__title">${category.name}</h1>
       </div>
-      <p class="page-header__subtitle">${category.description}</p>
+      <p class="page-header__subtitle">${category.description || ''}</p>
     `;
     container.appendChild(pageHeader);
     pageHeader.querySelector('#back-btn')?.addEventListener('click', () => navigate('/'));

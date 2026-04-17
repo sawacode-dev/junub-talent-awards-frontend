@@ -269,6 +269,19 @@ button {
   transform: translateY(-1px);
 }
 
+/* --- Mobile profile overlay (body-level, closes dropdown on tap outside) --- */
+.mobile-profile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.mobile-profile-overlay--visible {
+  display: block;
+}
+
 /* --- Profile Dropdown --- */
 .profile-dropdown {
   position: absolute;
@@ -1258,7 +1271,6 @@ button {
     padding: 0 var(--space-md);
     gap: var(--space-sm);
     flex-wrap: nowrap;
-    overflow: hidden;
   }
 
   .header__logo {
@@ -1287,8 +1299,7 @@ button {
   }
 
   .header__btn--login {
-    font-size: 0.8rem;
-    padding: 8px 12px;
+    display: none;
   }
 
   .hero {
@@ -1348,37 +1359,9 @@ button {
     max-width: 100%;
   }
 
-  .mobile-backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.3);
-    z-index: 100;
-    opacity: 0;
-    visibility: hidden;
-    transition: all var(--transition-fast);
-  }
-  
-  .mobile-backdrop--visible {
-    opacity: 1;
-    visibility: visible;
-  }
-  
   .profile-dropdown {
-    position: fixed;
-    top: 0;
+    width: min(220px, calc(100vw - 2 * var(--space-md)));
     right: 0;
-    bottom: 0;
-    height: 100vh;
-    width: 70%;
-    margin: 0;
-    border-radius: 0;
-    transform: translateX(100%);
-    box-shadow: -4px 0 30px rgba(0,0,0,0.5);
-  }
-  
-  .profile-dropdown--open {
-    transform: translateX(0);
   }
 }
 

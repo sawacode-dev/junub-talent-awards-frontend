@@ -2,6 +2,26 @@ import { getCurrentUser, signInWithGoogle, signOut, onAuthChange } from '../auth
 import { navigate } from '../router';
 import type { User } from '@supabase/supabase-js';
 
+// Module-level references persist across re-renders.
+let _docClickHandler: ((e: MouseEvent) => void) | null = null;
+let _mobileOverlay: HTMLElement | null = null;
+
+function getMobileOverlay(): HTMLElement {
+  if (!_mobileOverlay) {
+    _mobileOverlay = document.createElement('div');
+    _mobileOverlay.className = 'mobile-profile-overlay';
+    document.body.appendChild(_mobileOverlay);
+  }
+  return _mobileOverlay;
+}
+
+function hideOverlay() {
+  if (_mobileOverlay) {
+    _mobileOverlay.classList.remove('mobile-profile-overlay--visible');
+    _mobileOverlay.onclick = null;
+  }
+}
+
 export async function createHeader(): Promise<HTMLElement> {
   const header = document.createElement('header');
   header.className = 'header';
@@ -40,8 +60,7 @@ function renderHeader(header: HTMLElement, user: User | null) {
                 alt="${user.user_metadata?.full_name || user.email}"
               />
               <span class="header__user-name">${user.user_metadata?.full_name || user.email}</span>
-              
-              <div class="mobile-backdrop" id="mobile-backdrop"></div>
+
               <div class="profile-dropdown" id="profile-dropdown">
                 <div class="profile-dropdown__header">
                   <strong>${user.user_metadata?.full_name || 'Voter'}</strong>
@@ -50,7 +69,7 @@ function renderHeader(header: HTMLElement, user: User | null) {
                 <div class="profile-dropdown__actions">
                   <button class="profile-dropdown__btn" id="btn-invite-friends">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-                    Invite Friends
+                    Invite a friend to vote
                   </button>
                   <button class="profile-dropdown__btn profile-dropdown__btn--danger" id="btn-signout">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
@@ -91,6 +110,7 @@ function renderHeader(header: HTMLElement, user: User | null) {
   const signOutBtn = header.querySelector('#btn-signout');
   if (signOutBtn) {
     signOutBtn.addEventListener('click', async () => {
+      hideOverlay();
       try {
         await signOut();
         navigate('/');
@@ -103,28 +123,37 @@ function renderHeader(header: HTMLElement, user: User | null) {
   // Profile dropdown toggle
   const userMenu = header.querySelector('#user-profile-menu');
   const dropdown = header.querySelector('#profile-dropdown');
-  const backdrop = header.querySelector('#mobile-backdrop');
-  
+
   if (userMenu && dropdown) {
     userMenu.addEventListener('click', (e) => {
-      // Don't toggle if clicking the dropdown contents
+      // Don't toggle if clicking inside the dropdown contents
       if ((e.target as HTMLElement).closest('.profile-dropdown')) return;
-      dropdown.classList.toggle('profile-dropdown--open');
-      backdrop?.classList.toggle('mobile-backdrop--visible');
-    });
 
-    // Close on click outside or backdrop tap
-    document.addEventListener('click', (e) => {
-      if (!userMenu.contains(e.target as Node)) {
-        dropdown.classList.remove('profile-dropdown--open');
-        backdrop?.classList.remove('mobile-backdrop--visible');
+      const isOpen = dropdown.classList.toggle('profile-dropdown--open');
+      const overlay = getMobileOverlay();
+
+      if (isOpen) {
+        overlay.classList.add('mobile-profile-overlay--visible');
+        overlay.onclick = () => {
+          dropdown.classList.remove('profile-dropdown--open');
+          hideOverlay();
+        };
+      } else {
+        hideOverlay();
       }
     });
 
-    backdrop?.addEventListener('click', () => {
+    // Desktop: close on click outside (overlay handles mobile)
+    if (_docClickHandler) {
+      document.removeEventListener('click', _docClickHandler);
+    }
+    _docClickHandler = (e: MouseEvent) => {
+      if (!userMenu.contains(e.target as Node)) {
         dropdown.classList.remove('profile-dropdown--open');
-        backdrop.classList.remove('mobile-backdrop--visible');
-    });
+        hideOverlay();
+      }
+    };
+    document.addEventListener('click', _docClickHandler);
   }
 
   // Invite friends logic
@@ -136,18 +165,18 @@ function renderHeader(header: HTMLElement, user: User | null) {
         text: 'Join me in voting at the Junub Talent Awards!',
         url: window.location.origin
       };
-      
+
       try {
         if (navigator.share) {
           await navigator.share(shareData);
         } else {
-          // Fallback if not supported
-          window.open(`https://wa.me/?text=\${encodeURIComponent(shareData.text + ' ' + shareData.url)}`, '_blank');
+          window.open(`https://wa.me/?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}`, '_blank');
         }
       } catch (err) {
         console.error('Share failed:', err);
       }
       dropdown?.classList.remove('profile-dropdown--open');
+      hideOverlay();
     });
   }
 }
