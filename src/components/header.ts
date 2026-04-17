@@ -21,7 +21,10 @@ function renderHeader(header: HTMLElement, user: User | null) {
     <div class="header__inner">
       <a href="#/" class="header__logo" id="logo-link">
         <span class="header__logo-icon">🏆</span>
-        <span class="header__logo-text">JUNUB TALENT AWARDS</span>
+        <span class="header__logo-text">
+          <span class="logo-text-top">JUNUB</span>
+          <span class="logo-text-bottom">TALENT AWARDS</span>
+        </span>
       </a>
       <nav class="header__nav">
         <a href="#/" class="header__nav-link" id="nav-home">Home</a>
@@ -30,14 +33,30 @@ function renderHeader(header: HTMLElement, user: User | null) {
       <div class="header__auth">
         ${user
           ? `
-            <div class="header__user">
+            <div class="header__user" id="user-profile-menu">
               <img
                 class="header__avatar"
                 src="${user.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.email || 'User')}&background=7c3aed&color=fff`}"
                 alt="${user.user_metadata?.full_name || user.email}"
               />
               <span class="header__user-name">${user.user_metadata?.full_name || user.email}</span>
-              <button class="header__btn header__btn--logout" id="btn-signout">Sign Out</button>
+              
+              <div class="profile-dropdown" id="profile-dropdown">
+                <div class="profile-dropdown__header">
+                  <strong>${user.user_metadata?.full_name || 'Voter'}</strong>
+                  <span>${user.email}</span>
+                </div>
+                <div class="profile-dropdown__actions">
+                  <button class="profile-dropdown__btn" id="btn-invite-friends">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                    Invite Friends
+                  </button>
+                  <button class="profile-dropdown__btn profile-dropdown__btn--danger" id="btn-signout">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    Sign Out
+                  </button>
+                </div>
+              </div>
             </div>
           `
           : `
@@ -77,6 +96,49 @@ function renderHeader(header: HTMLElement, user: User | null) {
       } catch (err) {
         console.error('Sign-out failed:', err);
       }
+    });
+  }
+
+  // Profile dropdown toggle
+  const userMenu = header.querySelector('#user-profile-menu');
+  const dropdown = header.querySelector('#profile-dropdown');
+  
+  if (userMenu && dropdown) {
+    userMenu.addEventListener('click', (e) => {
+      // Don't toggle if clicking the dropdown contents
+      if ((e.target as HTMLElement).closest('.profile-dropdown')) return;
+      dropdown.classList.toggle('profile-dropdown--open');
+    });
+
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+      if (!userMenu.contains(e.target as Node)) {
+        dropdown.classList.remove('profile-dropdown--open');
+      }
+    });
+  }
+
+  // Invite friends logic
+  const inviteBtn = header.querySelector('#btn-invite-friends');
+  if (inviteBtn) {
+    inviteBtn.addEventListener('click', async () => {
+      const shareData = {
+        title: 'Junub Talent Awards',
+        text: 'Join me in voting at the Junub Talent Awards!',
+        url: window.location.origin
+      };
+      
+      try {
+        if (navigator.share) {
+          await navigator.share(shareData);
+        } else {
+          // Fallback if not supported
+          window.open(`https://wa.me/?text=\${encodeURIComponent(shareData.text + ' ' + shareData.url)}`, '_blank');
+        }
+      } catch (err) {
+        console.error('Share failed:', err);
+      }
+      dropdown?.classList.remove('profile-dropdown--open');
     });
   }
 }

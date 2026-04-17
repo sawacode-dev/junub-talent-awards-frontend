@@ -180,31 +180,50 @@ function renderSuccessState(container: HTMLElement, candidateName: string) {
       <h1 class="success-card__title">Vote Recorded!</h1>
       <p class="success-card__message">You successfully cast your vote for <strong>${candidateName}</strong>. Your vote has been recorded for the Junub Talent Awards.</p>
       
-      <div class="success-card__reminder">
+      <div class="success-card__reminder" style="margin-bottom: var(--space-md);">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
         </svg>
         Ready to vote again in 24 hours
       </div>
 
+      <h3 style="font-size: 0.95rem; font-weight: 600; color: var(--color-text); margin-bottom: var(--space-sm);">Invite friends to help support ${candidateName}:</h3>
       <div class="success-card__share-group">
+        <button id="success-share-native-btn" class="btn btn--primary" style="flex: 1; justify-content: center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+          Share
+        </button>
         <a href="https://wa.me/?text=${encodeURIComponent(`I just voted for ${candidateName} at the Junub Talent Awards. Cast your vote here: ${window.location.origin}`)}" 
            target="_blank" 
            rel="noopener noreferrer" 
            class="btn btn--whatsapp">
           WhatsApp
         </a>
-        <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}" 
-           target="_blank" 
-           rel="noopener noreferrer" 
-           class="btn btn--facebook">
-          Facebook
-        </a>
       </div>
 
-      <button class="btn btn--primary success-card__btn" id="success-done-btn">Back to Categories</button>
+      <button class="btn success-card__btn" style="background: rgba(255,255,255,0.1); color: var(--color-text);" id="success-done-btn">Back to Categories</button>
     </div>
   `;
+
+  // Native share integration
+  container.querySelector('#success-share-native-btn')?.addEventListener('click', async () => {
+    const shareData = {
+      title: 'Junub Talent Awards',
+      text: `I just voted for ${candidateName} at the Junub Talent Awards!`,
+      url: window.location.origin
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback to Facebook if native share isn't supported (since we removed the separate fb button)
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}`, '_blank');
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  });
 
   container.querySelector('#success-done-btn')?.addEventListener('click', () => {
     navigate('/');
