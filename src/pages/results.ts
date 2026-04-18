@@ -4,77 +4,40 @@ import {
   fetchUserVotes,
   fetchSettings,
 } from '../api';
-import type { Candidate, Category, Vote, Settings } from '../api';
+import type { Candidate, Category, Vote } from '../api';
 import { getCurrentUser } from '../auth';
 import { showPageLoader } from '../components/loader';
 import { navigate } from '../router';
+import {
+  escapeHtml,
+  fallbackAvatarUrl,
+  renderLeaderboardRow,
+  type RankedCandidate,
+} from '../components/leaderboard-row';
+import { appendQuoteIfOpen } from '../components/results-quote';
 
-interface RankedCandidate extends Candidate {
-  rankInCategory: number;
-}
+const TOP_N = 3;
 
 interface CategoryGroup {
   category: Category;
   candidates: RankedCandidate[];
   leaderVotes: number;
-}
-
-const QUOTE_TEXT =
-  'Success is not final, failure is not fatal: it is the courage to continue that counts.';
-const QUOTE_AUTHOR = 'Winston Churchill';
-
-function isVotingOpen(settings: Settings | null): boolean {
-  if (!settings || !settings.election_end) return true;
-  return new Date(settings.election_end).getTime() > Date.now();
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function rankBadge(rank: number): string {
-  if (rank === 1) return '🥇';
-  if (rank === 2) return '🥈';
-  if (rank === 3) return '🥉';
-  return `#${rank}`;
-}
-
-function fallbackAvatarUrl(name: string, size = 200): string {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=7c3aed&color=fff&size=${size}`;
-}
-
-function renderRow(c: RankedCandidate, leaderVotes: number): string {
-  const pct = leaderVotes > 0 ? (c.vote_count / leaderVotes) * 100 : 0;
-  const fb = fallbackAvatarUrl(c.name, 200);
-  const safeName = escapeHtml(c.name);
-  return `
-    <div class="leaderboard__row ${c.rankInCategory <= 3 ? 'leaderboard__row--top' : ''}" style="animation-delay: ${(c.rankInCategory - 1) * 0.04}s">
-      <span class="leaderboard__rank">${rankBadge(c.rankInCategory)}</span>
-      <img class="leaderboard__avatar" src="${c.image_url || fb}" alt="${safeName}" loading="lazy" onerror="this.onerror=null;this.src='${fb}';" />
-      <div class="leaderboard__info">
-        <span class="leaderboard__name">${safeName}</span>
-        <div class="leaderboard__bar-wrapper">
-          <div class="leaderboard__bar" style="width: ${pct}%"></div>
-        </div>
-      </div>
-      <span class="leaderboard__votes">${c.vote_count.toLocaleString()}</span>
-    </div>
-  `;
+  totalCandidates: number;
 }
 
 function renderCategorySection(group: CategoryGroup, isActive: boolean, isMobileOpen: boolean): string {
-  const { category, candidates, leaderVotes } = group;
+  const { category, candidates, leaderVotes, totalCandidates } = group;
   const icon = category.icon || '🏆';
   const safeName = escapeHtml(category.name);
 
-  const body = candidates.length === 0
+  const top = candidates.slice(0, TOP_N);
+  const body = top.length === 0
     ? `<div class="results-empty">No candidates yet in this category.</div>`
-    : candidates.map(c => renderRow(c, leaderVotes)).join('');
+    : top.map(c => renderLeaderboardRow(c, leaderVotes)).join('');
+
+  const viewAll = totalCandidates > TOP_N
+    ? `<a class="results-viewall" href="#/results/${encodeURIComponent(category.slug)}">View all ${totalCandidates} in ${safeName} →</a>`
+    : '';
 
   return `
     <section
@@ -89,7 +52,7 @@ function renderCategorySection(group: CategoryGroup, isActive: boolean, isMobile
       >
         <span class="results-section__icon">${icon}</span>
         <span class="results-section__title">${safeName}</span>
-        <span class="results-section__count">${candidates.length}</span>
+        <span class="results-section__count">${totalCandidates}</span>
         <svg class="results-section__chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="6 9 12 15 18 9"/>
         </svg>
@@ -101,6 +64,7 @@ function renderCategorySection(group: CategoryGroup, isActive: boolean, isMobile
         <div class="leaderboard">
           ${body}
         </div>
+        ${viewAll}
       </div>
     </section>
   `;
@@ -125,50 +89,33 @@ function renderTabs(groups: CategoryGroup[], activeId: string): string {
   `;
 }
 
-function renderYourVotes(
+function renderGlimpse(
   votes: Vote[],
-  candidateIndex: Map<string, RankedCandidate>,
-  categoryIndex: Map<string, Category>
+  candidateIndex: Map<string, Candidate>
 ): string {
-  const items = votes
+  if (votes.length === 0) return '';
+  const categoryCount = new Set(votes.map(v => v.category_id)).size;
+  const recentVotes = [...votes]
+    .sort((a, b) => new Date(b.voted_at).getTime() - new Date(a.voted_at).getTime())
+    .slice(0, 3);
+  const avatars = recentVotes
     .map(v => {
       const c = candidateIndex.get(v.candidate_id);
-      const cat = categoryIndex.get(v.category_id);
-      if (!c || !cat) return null;
+      if (!c) return '';
       const fb = fallbackAvatarUrl(c.name, 80);
-      return `
-        <li class="your-votes__item">
-          <img class="your-votes__avatar" src="${c.image_url || fb}" alt="${escapeHtml(c.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fb}';" />
-          <div class="your-votes__info">
-            <span class="your-votes__name">${escapeHtml(c.name)}</span>
-            <span class="your-votes__category">${escapeHtml(cat.name)}</span>
-          </div>
-          <div class="your-votes__meta">
-            <span class="your-votes__rank">${rankBadge(c.rankInCategory)}</span>
-            <span class="your-votes__votes">${c.vote_count.toLocaleString()} votes</span>
-          </div>
-        </li>
-      `;
+      return `<img class="glimpse__avatar" src="${c.image_url || fb}" alt="${escapeHtml(c.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fb}';" />`;
     })
-    .filter(Boolean)
     .join('');
 
-  if (!items) return '';
-
   return `
-    <section class="your-votes" aria-labelledby="your-votes-title">
-      <h2 class="your-votes__title" id="your-votes-title">Your Votes</h2>
-      <ul class="your-votes__list">${items}</ul>
-    </section>
-  `;
-}
-
-function renderQuote(): string {
-  return `
-    <blockquote class="results-quote">
-      <p class="results-quote__text">${escapeHtml(QUOTE_TEXT)}</p>
-      <cite class="results-quote__author">— ${escapeHtml(QUOTE_AUTHOR)}</cite>
-    </blockquote>
+    <a class="glimpse" href="#/profile">
+      <div class="glimpse__avatars">${avatars}</div>
+      <div class="glimpse__text">
+        <strong>You've voted for ${votes.length} candidate${votes.length === 1 ? '' : 's'}</strong>
+        <span>across ${categoryCount} categor${categoryCount === 1 ? 'y' : 'ies'}</span>
+      </div>
+      <span class="glimpse__cta">View your votes →</span>
+    </a>
   `;
 }
 
@@ -191,15 +138,16 @@ export async function renderResultsPage(container: HTMLElement) {
       const sorted = [...candidateLists[i]].sort((a, b) => b.vote_count - a.vote_count);
       const ranked: RankedCandidate[] = sorted.map((c, idx) => ({ ...c, rankInCategory: idx + 1 }));
       const leaderVotes = ranked[0]?.vote_count ?? 0;
-      return { category, candidates: ranked, leaderVotes };
+      return {
+        category,
+        candidates: ranked,
+        leaderVotes,
+        totalCandidates: ranked.length,
+      };
     });
 
     const candidateIndex = new Map<string, RankedCandidate>();
-    const categoryIndex = new Map<string, Category>();
-    groups.forEach(g => {
-      categoryIndex.set(g.category.id, g.category);
-      g.candidates.forEach(c => candidateIndex.set(c.id, c));
-    });
+    groups.forEach(g => g.candidates.forEach(c => candidateIndex.set(c.id, c)));
 
     const userVoteCategoryIds = new Set(userVotes.map(v => v.category_id));
     const categoryVoteCount = new Map<string, number>();
@@ -238,17 +186,13 @@ export async function renderResultsPage(container: HTMLElement) {
     container.appendChild(pageHeader);
     pageHeader.querySelector('#back-btn')?.addEventListener('click', () => navigate('/'));
 
-    if (isVotingOpen(settings)) {
-      const quoteWrap = document.createElement('div');
-      quoteWrap.innerHTML = renderQuote();
-      container.appendChild(quoteWrap.firstElementChild as HTMLElement);
-    }
+    appendQuoteIfOpen(container, settings);
 
     if (user && userVotes.length > 0) {
-      const yvWrap = document.createElement('div');
-      yvWrap.innerHTML = renderYourVotes(userVotes, candidateIndex, categoryIndex);
-      const yvEl = yvWrap.firstElementChild as HTMLElement | null;
-      if (yvEl) container.appendChild(yvEl);
+      const wrap = document.createElement('div');
+      wrap.innerHTML = renderGlimpse(userVotes, candidateIndex);
+      const el = wrap.firstElementChild as HTMLElement | null;
+      if (el) container.appendChild(el);
     }
 
     if (groups.length === 0) {

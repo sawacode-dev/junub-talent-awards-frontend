@@ -3,6 +3,8 @@ import { createHeader } from './components/header';
 import { renderHomePage } from './pages/home';
 import { renderCategoryPage } from './pages/category';
 import { renderResultsPage } from './pages/results';
+import { renderResultsCategoryPage } from './pages/results-category';
+import { renderProfilePage } from './pages/profile';
 import { addRoute, startRouter } from './router';
 
 async function initApp() {
@@ -36,6 +38,8 @@ async function initApp() {
   addRoute('/', () => renderHomePage(main));
   addRoute('/category/:slug', (params) => renderCategoryPage(main, params.slug));
   addRoute('/results', () => renderResultsPage(main));
+  addRoute('/results/:slug', (params) => renderResultsCategoryPage(main, params.slug));
+  addRoute('/profile', () => renderProfilePage(main));
 
   // Start router
   startRouter();
