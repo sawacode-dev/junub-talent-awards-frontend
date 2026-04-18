@@ -5,6 +5,8 @@ import { renderCategoryPage } from './pages/category';
 import { renderResultsPage } from './pages/results';
 import { renderResultsCategoryPage } from './pages/results-category';
 import { renderProfilePage } from './pages/profile';
+import { renderPrivacyPage } from './pages/privacy';
+import { renderTermsPage } from './pages/terms';
 import { addRoute, startRouter } from './router';
 import { startSettingsRealtime } from './ceremony';
 
@@ -31,6 +33,11 @@ async function initApp() {
     <div class="footer__inner">
       <p class="footer__text">© ${new Date().getFullYear()} Junub Talent Awards</p>
       <p class="footer__tagline">Celebrating excellence in art, dance, and drama.</p>
+      <nav class="footer__links" aria-label="Legal">
+        <a href="#/privacy" class="footer__link">Privacy Policy</a>
+        <span class="footer__sep" aria-hidden="true">·</span>
+        <a href="#/terms" class="footer__link">Terms of Service</a>
+      </nav>
     </div>
   `;
   app.appendChild(footer);
@@ -41,6 +48,8 @@ async function initApp() {
   addRoute('/results', () => renderResultsPage(main));
   addRoute('/results/:slug', (params) => renderResultsCategoryPage(main, params.slug));
   addRoute('/profile', () => renderProfilePage(main));
+  addRoute('/privacy', () => renderPrivacyPage(main));
+  addRoute('/terms', () => renderTermsPage(main));
 
   // Start realtime ceremony updates so reveal lands instantly during the live ceremony.
   startSettingsRealtime();
