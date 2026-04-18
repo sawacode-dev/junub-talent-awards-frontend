@@ -46,7 +46,7 @@ export async function renderResultsCategoryPage(container: HTMLElement, slug: st
     const leaderVotes = ranked[0]?.vote_count ?? 0;
 
     const year = eventYear(settings?.election_end);
-    const canonical = siteUrl(`/#/results/${encodeURIComponent(category.slug)}`);
+    const canonical = siteUrl(`/results/${encodeURIComponent(category.slug)}`);
     const itemListJsonLd = ranked.length > 0
       ? {
           '@context': 'https://schema.org',
@@ -72,7 +72,7 @@ export async function renderResultsCategoryPage(container: HTMLElement, slug: st
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl('/') },
-        { '@type': 'ListItem', position: 2, name: 'Live Results', item: siteUrl('/#/results') },
+        { '@type': 'ListItem', position: 2, name: 'Live Results', item: siteUrl('/results') },
         { '@type': 'ListItem', position: 3, name: category.name, item: canonical },
       ],
     };

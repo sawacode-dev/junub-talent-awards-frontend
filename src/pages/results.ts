@@ -39,7 +39,7 @@ function renderCategorySection(group: CategoryGroup, isActive: boolean, isMobile
     : top.map(c => renderLeaderboardRow(c, leaderVotes, showCounts)).join('');
 
   const viewAll = totalCandidates > TOP_N
-    ? `<a class="results-viewall" href="#/results/${encodeURIComponent(category.slug)}">View all ${totalCandidates} in ${safeName} →</a>`
+    ? `<a class="results-viewall" href="/results/${encodeURIComponent(category.slug)}">View all ${totalCandidates} in ${safeName} →</a>`
     : '';
 
   return `
@@ -111,7 +111,7 @@ function renderGlimpse(
     .join('');
 
   return `
-    <a class="glimpse" href="#/profile">
+    <a class="glimpse" href="/profile">
       <div class="glimpse__avatars">${avatars}</div>
       <div class="glimpse__text">
         <strong>You've voted for ${votes.length} candidate${votes.length === 1 ? '' : 's'}</strong>
@@ -143,7 +143,7 @@ export async function renderResultsPage(container: HTMLElement) {
     );
 
     const year = eventYear(settings?.election_end);
-    const canonical = siteUrl('/#/results');
+    const canonical = siteUrl('/results');
     setMeta({
       title: `Live Results — Junub Talent Awards ${year}`,
       description: `Live per-category leaderboards for the Junub Talent Awards ${year}. See which Junubins are leading across art, dance, drama, and creative arts.`,
@@ -155,7 +155,7 @@ export async function renderResultsPage(container: HTMLElement) {
           '@type': 'BreadcrumbList',
           itemListElement: [
             { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl('/') },
-            { '@type': 'ListItem', position: 2, name: 'Live Results', item: canonical },
+            { '@type': 'ListItem', position: 2, name: 'Live Results', item: siteUrl('/results') },
           ],
         },
       ],

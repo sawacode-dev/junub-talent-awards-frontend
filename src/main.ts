@@ -34,9 +34,9 @@ async function initApp() {
       <p class="footer__text">© ${new Date().getFullYear()} Junub Talent Awards</p>
       <p class="footer__tagline">Celebrating excellence in art, dance, and drama.</p>
       <nav class="footer__links" aria-label="Legal">
-        <a href="#/privacy" class="footer__link">Privacy Policy</a>
+        <a href="/privacy" class="footer__link">Privacy Policy</a>
         <span class="footer__sep" aria-hidden="true">·</span>
-        <a href="#/terms" class="footer__link">Terms of Service</a>
+        <a href="/terms" class="footer__link">Terms of Service</a>
       </nav>
     </div>
   `;

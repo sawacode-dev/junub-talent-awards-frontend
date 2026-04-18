@@ -50,7 +50,7 @@ function renderVoteRow(row: VoteRow, categorySlug: string, showCounts: boolean):
   const fb = fallbackAvatarUrl(candidate.name, 200);
   const safeName = escapeHtml(candidate.name);
   return `
-    <a class="profile-vote" href="#/results/${encodeURIComponent(categorySlug)}">
+    <a class="profile-vote" href="/results/${encodeURIComponent(categorySlug)}">
       <img class="profile-vote__avatar" src="${candidate.image_url || fb}" alt="${safeName}" loading="lazy" onerror="this.onerror=null;this.src='${fb}';" />
       <div class="profile-vote__info">
         <span class="profile-vote__name">${safeName}</span>
@@ -78,7 +78,7 @@ function renderGroup(group: ProfileGroup, isOpen: boolean, showCounts: boolean):
         <span class="results-section__icon">${renderCategoryIcon(category)}</span>
         <span class="results-section__title">${safeName}</span>
         <span class="results-section__count">${rows.length}</span>
-        <a class="results-section__link" href="#/results/${encodeURIComponent(category.slug)}" onclick="event.stopPropagation()">View leaderboard →</a>
+        <a class="results-section__link" href="/results/${encodeURIComponent(category.slug)}" onclick="event.stopPropagation()">View leaderboard →</a>
         <svg class="results-section__chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="6 9 12 15 18 9"/>
         </svg>
@@ -99,7 +99,7 @@ export async function renderProfilePage(container: HTMLElement) {
   setMeta({
     title: 'Your Profile — Junub Talent Awards',
     description: 'Your votes and profile on the Junub Talent Awards platform.',
-    canonical: siteUrl('/#/profile'),
+    canonical: siteUrl('/profile'),
     noindex: true,
   });
 

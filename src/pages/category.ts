@@ -44,7 +44,7 @@ export async function renderCategoryPage(container: HTMLElement, slug: string) {
     ]);
     const votingOpen = ceremony.votingOpen && !ceremony.votingClosed;
 
-    const canonical = siteUrl(`/#/category/${encodeURIComponent(category.slug)}`);
+    const canonical = siteUrl(`/category/${encodeURIComponent(category.slug)}`);
     setMeta({
       title: `Vote for Best ${category.name} — Junub Talent Awards`,
       description: `Cast your vote for the best ${category.name} nominees in the Junub Talent Awards, celebrating outstanding South Sudanese (Junubins) talent. ${category.description || ''}`.trim(),

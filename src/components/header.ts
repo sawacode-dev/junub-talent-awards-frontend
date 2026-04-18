@@ -59,7 +59,7 @@ export async function createHeader(): Promise<HTMLElement> {
 function renderHeader(header: HTMLElement, user: User | null, showResultsLink: boolean) {
   header.innerHTML = `
     <div class="header__inner">
-      <a href="#/" class="header__logo" id="logo-link">
+      <a href="/" class="header__logo" id="logo-link">
         <span class="header__logo-icon">🏆</span>
         <span class="header__logo-text">
           <span class="logo-text-top">JUNUB</span>
@@ -67,8 +67,8 @@ function renderHeader(header: HTMLElement, user: User | null, showResultsLink: b
         </span>
       </a>
       <nav class="header__nav">
-        <a href="#/" class="header__nav-link" id="nav-home">Home</a>
-        ${showResultsLink ? `<a href="#/results" class="header__nav-link" id="nav-results">Results</a>` : ''}
+        <a href="/" class="header__nav-link" id="nav-home">Home</a>
+        ${showResultsLink ? `<a href="/results" class="header__nav-link" id="nav-results">Results</a>` : ''}
       </nav>
       <div class="header__auth">
         ${user

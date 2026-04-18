@@ -120,7 +120,7 @@ const doc: LegalDoc = {
           <li>Store and display your profile information and voting activity</li>
           <li>Use anonymized voting data for analytics and platform improvement</li>
         </ul>
-        <p>You retain ownership of your personal information. See our <a class="legal__link" href="#/privacy">Privacy Policy</a> for how we handle your data.</p>
+        <p>You retain ownership of your personal information. See our <a class="legal__link" href="/privacy">Privacy Policy</a> for how we handle your data.</p>
 
         <h3 class="legal__h3">5.3 Nominee Content</h3>
         <p>Nominee information (names, images, biographies) is submitted by administrators or the nominees themselves. If you believe any nominee content infringes your intellectual property rights, contact us at <a class="legal__link" href="mailto:liondynasty97@gmail.com">liondynasty97@gmail.com</a>.</p>
@@ -297,7 +297,7 @@ const doc: LegalDoc = {
       title: '14. General Provisions',
       body: `
         <h3 class="legal__h3">14.1 Entire Agreement</h3>
-        <p>These Terms, together with our <a class="legal__link" href="#/privacy">Privacy Policy</a>, constitute the entire agreement between you and us regarding the Platform.</p>
+        <p>These Terms, together with our <a class="legal__link" href="/privacy">Privacy Policy</a>, constitute the entire agreement between you and us regarding the Platform.</p>
 
         <h3 class="legal__h3">14.2 Severability</h3>
         <p>If any provision of these Terms is found invalid or unenforceable, the remaining provisions remain in full effect.</p>
