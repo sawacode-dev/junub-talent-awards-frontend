@@ -53,9 +53,10 @@ export async function renderResultsPage(container: HTMLElement) {
       row.className = `leaderboard__row ${rank <= 3 ? 'leaderboard__row--top' : ''}`;
       row.style.animationDelay = `${index * 0.05}s`;
 
+      const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(candidate.name)}&background=7c3aed&color=fff&size=200`;
       row.innerHTML = `
         <span class="leaderboard__rank">${rank <= 3 ? ['🥇', '🥈', '🥉'][rank - 1] : `#${rank}`}</span>
-        <img class="leaderboard__avatar" src="${candidate.image_url}" alt="${candidate.name}" loading="lazy" />
+        <img class="leaderboard__avatar" src="${candidate.image_url || fallbackAvatar}" alt="${candidate.name}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackAvatar}';" />
         <div class="leaderboard__info">
           <span class="leaderboard__name">${candidate.name}</span>
           <span class="leaderboard__category">${candidate.category_name}</span>

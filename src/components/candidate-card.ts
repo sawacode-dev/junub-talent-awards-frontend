@@ -20,13 +20,16 @@ export function createCandidateCard(options: CandidateCardOptions): HTMLElement 
     ? `<span class="candidate-card__rank candidate-card__rank--${rank}">${rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}</span>`
     : `<span class="candidate-card__rank">#${rank}</span>`;
 
+  const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(candidate.name)}&background=7c3aed&color=fff&size=400`;
+  const initialSrc = candidate.image_url || fallbackAvatar;
   card.innerHTML = `
     <div class="candidate-card__image-wrapper">
       <img
         class="candidate-card__image"
-        src="${candidate.image_url}"
+        src="${initialSrc}"
         alt="${candidate.name}"
         loading="lazy"
+        onerror="this.onerror=null;this.src='${fallbackAvatar}';"
       />
       ${rankBadge}
     </div>
