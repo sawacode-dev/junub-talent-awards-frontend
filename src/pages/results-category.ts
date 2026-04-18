@@ -7,10 +7,18 @@ import {
   renderLeaderboardRow,
   type RankedCandidate,
 } from '../components/leaderboard-row';
-import { appendQuoteIfOpen } from '../components/results-quote';
+import { appendQuoteIfOpen, isVotingOpen } from '../components/results-quote';
+import { setMeta, siteUrl, eventYear, slugifyName } from '../seo';
+import { renderCategoryIcon } from '../components/category-icon';
+import { canViewResults } from '../ceremony';
 
 export async function renderResultsCategoryPage(container: HTMLElement, slug: string) {
   showPageLoader(container);
+
+  if (!(await canViewResults())) {
+    navigate('/');
+    return;
+  }
 
   try {
     const [categories, settings] = await Promise.all([
@@ -37,6 +45,45 @@ export async function renderResultsCategoryPage(container: HTMLElement, slug: st
     const ranked: RankedCandidate[] = sorted.map((c, i) => ({ ...c, rankInCategory: i + 1 }));
     const leaderVotes = ranked[0]?.vote_count ?? 0;
 
+    const year = eventYear(settings?.election_end);
+    const canonical = siteUrl(`/#/results/${encodeURIComponent(category.slug)}`);
+    const itemListJsonLd = ranked.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          name: `${category.name} — Junub Talent Awards ${year}`,
+          numberOfItems: ranked.length,
+          itemListElement: ranked.map((c) => ({
+            '@type': 'ListItem',
+            position: c.rankInCategory,
+            item: {
+              '@type': 'Person',
+              name: c.name,
+              description: c.bio || undefined,
+              image: c.image_url || undefined,
+              identifier: c.id,
+              url: `${canonical}#candidate-${slugifyName(c.name)}-${c.id}`,
+            },
+          })),
+        }
+      : null;
+    const breadcrumbJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl('/') },
+        { '@type': 'ListItem', position: 2, name: 'Live Results', item: siteUrl('/#/results') },
+        { '@type': 'ListItem', position: 3, name: category.name, item: canonical },
+      ],
+    };
+    setMeta({
+      title: `Best ${category.name} Results — Junub Talent Awards ${year}`,
+      description: `Live leaderboard for Best ${category.name} at the Junub Talent Awards ${year}. ${ranked.length} South Sudanese (Junubins) nominee${ranked.length === 1 ? '' : 's'} ranked by votes.`,
+      canonical,
+      ogType: 'website',
+      jsonLd: itemListJsonLd ? [breadcrumbJsonLd, itemListJsonLd] : [breadcrumbJsonLd],
+    });
+
     container.innerHTML = '';
 
     const header = document.createElement('div');
@@ -49,7 +96,7 @@ export async function renderResultsCategoryPage(container: HTMLElement, slug: st
         Back to Results
       </button>
       <div class="page-header__title-group">
-        <span class="page-header__icon">${category.icon || '🏆'}</span>
+        <span class="page-header__icon">${renderCategoryIcon(category)}</span>
         <h1 class="page-header__title">${escapeHtml(category.name)} — Full Leaderboard</h1>
       </div>
       <p class="page-header__subtitle">All ${ranked.length} candidate${ranked.length === 1 ? '' : 's'}, ranked by votes</p>
@@ -71,9 +118,10 @@ export async function renderResultsCategoryPage(container: HTMLElement, slug: st
       return;
     }
 
+    const showCounts = !isVotingOpen(settings);
     const board = document.createElement('div');
     board.className = 'leaderboard';
-    board.innerHTML = ranked.map(c => renderLeaderboardRow(c, leaderVotes)).join('');
+    board.innerHTML = ranked.map(c => renderLeaderboardRow(c, leaderVotes, showCounts)).join('');
     container.appendChild(board);
   } catch (err) {
     container.innerHTML = `

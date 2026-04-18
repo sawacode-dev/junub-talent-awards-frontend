@@ -11,6 +11,9 @@ import { createCountdown } from '../components/countdown';
 import { showPageLoader } from '../components/loader';
 import { showToast } from '../components/toast';
 import { navigate } from '../router';
+import { setMeta, siteUrl } from '../seo';
+import { renderCategoryIcon } from '../components/category-icon';
+import { getCeremonyState } from '../ceremony';
 import confetti from 'canvas-confetti';
 
 export async function renderCategoryPage(container: HTMLElement, slug: string) {
@@ -34,10 +37,30 @@ export async function renderCategoryPage(container: HTMLElement, slug: string) {
     }
 
     const user = await getCurrentUser();
-    const [candidates, userVote] = await Promise.all([
+    const [candidates, userVote, ceremony] = await Promise.all([
       fetchCandidates(category.id),
       fetchUserVoteForCategory(category.id),
+      getCeremonyState(),
     ]);
+    const votingOpen = ceremony.votingOpen && !ceremony.votingClosed;
+
+    const canonical = siteUrl(`/#/category/${encodeURIComponent(category.slug)}`);
+    setMeta({
+      title: `Vote for Best ${category.name} — Junub Talent Awards`,
+      description: `Cast your vote for the best ${category.name} nominees in the Junub Talent Awards, celebrating outstanding South Sudanese (Junubins) talent. ${category.description || ''}`.trim(),
+      canonical,
+      ogType: 'website',
+      jsonLd: [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl('/') },
+            { '@type': 'ListItem', position: 2, name: category.name, item: canonical },
+          ],
+        },
+      ],
+    });
 
     // Determine if within 24h cooldown
     let hasVoted = false;
@@ -64,7 +87,7 @@ export async function renderCategoryPage(container: HTMLElement, slug: string) {
         Back
       </button>
       <div class="page-header__title-group">
-        <span class="page-header__icon">${category.icon || '🏆'}</span>
+        <span class="page-header__icon">${renderCategoryIcon(category)}</span>
         <h1 class="page-header__title">${category.name}</h1>
       </div>
       <p class="page-header__subtitle">${category.description || ''}</p>
@@ -72,8 +95,18 @@ export async function renderCategoryPage(container: HTMLElement, slug: string) {
     container.appendChild(pageHeader);
     pageHeader.querySelector('#back-btn')?.addEventListener('click', () => navigate('/'));
 
+    if (!votingOpen) {
+      const closedBanner = document.createElement('div');
+      closedBanner.className = 'auth-warning';
+      closedBanner.innerHTML = `
+        <span class="auth-warning__icon">🔒</span>
+        <p>Voting has closed. Winners will be revealed at the awards ceremony.</p>
+      `;
+      container.appendChild(closedBanner);
+    }
+
     // Auth warning
-    if (!user) {
+    if (!user && votingOpen) {
       const authWarning = document.createElement('div');
       authWarning.className = 'auth-warning';
       authWarning.innerHTML = `
@@ -111,8 +144,13 @@ export async function renderCategoryPage(container: HTMLElement, slug: string) {
           candidate,
           rank: index + 1,
           hasVoted,
+          votingOpen,
           votedCandidateId: hasVoted ? userVote?.candidate_id : undefined,
           onVote: async (candidateId: string) => {
+            if (!votingOpen) {
+              showToast('Voting has closed for this ceremony.', 'error');
+              return;
+            }
             if (!user) {
               // Trigger sign-in for unauthenticated users as requested
               try {

@@ -1,5 +1,6 @@
 import { getCurrentUser, signInWithGoogle, signOut, onAuthChange } from '../auth';
 import { navigate } from '../router';
+import { getCeremonyState, isAdmin, onSettingsChange, deriveCeremonyState } from '../ceremony';
 import type { User } from '@supabase/supabase-js';
 
 // Module-level references persist across re-renders.
@@ -22,21 +23,40 @@ function hideOverlay() {
   }
 }
 
+async function shouldShowResultsLink(user: User | null): Promise<boolean> {
+  const state = await getCeremonyState();
+  if (state.resultsRevealed) return true;
+  if (user && state.votingClosed && (await isAdmin())) return true;
+  return false;
+}
+
 export async function createHeader(): Promise<HTMLElement> {
   const header = document.createElement('header');
   header.className = 'header';
   header.id = 'main-header';
 
   const user = await getCurrentUser();
-  renderHeader(header, user);
+  const showResults = await shouldShowResultsLink(user);
+  renderHeader(header, user, showResults);
 
-  // Listen for auth changes
-  onAuthChange((u) => renderHeader(header, u));
+  let currentUser = user;
+  onAuthChange(async (u) => {
+    currentUser = u;
+    const next = await shouldShowResultsLink(u);
+    renderHeader(header, u, next);
+  });
+
+  onSettingsChange(async (settings) => {
+    const state = deriveCeremonyState(settings);
+    let show = state.resultsRevealed;
+    if (!show && currentUser && state.votingClosed) show = await isAdmin();
+    renderHeader(header, currentUser, show);
+  });
 
   return header;
 }
 
-function renderHeader(header: HTMLElement, user: User | null) {
+function renderHeader(header: HTMLElement, user: User | null, showResultsLink: boolean) {
   header.innerHTML = `
     <div class="header__inner">
       <a href="#/" class="header__logo" id="logo-link">
@@ -48,7 +68,7 @@ function renderHeader(header: HTMLElement, user: User | null) {
       </a>
       <nav class="header__nav">
         <a href="#/" class="header__nav-link" id="nav-home">Home</a>
-        <a href="#/results" class="header__nav-link" id="nav-results">Results</a>
+        ${showResultsLink ? `<a href="#/results" class="header__nav-link" id="nav-results">Results</a>` : ''}
       </nav>
       <div class="header__auth">
         ${user

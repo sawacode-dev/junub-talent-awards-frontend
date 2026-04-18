@@ -6,6 +6,7 @@ export interface Category {
   slug: string;
   description: string;
   icon: string;
+  image_url?: string | null;
   display_order: number;
   is_active: boolean;
 }
@@ -114,10 +115,13 @@ export async function fetchLeaderboard(): Promise<(Candidate & { category_name: 
 }
 
 export interface Settings {
+  id?: string;
   election_start: string | null;
   election_end: string | null;
   is_paused: boolean;
   public_message: string | null;
+  results_revealed: boolean;
+  revealed_at: string | null;
 }
 
 export async function fetchGlobalStats() {

@@ -4,6 +4,42 @@
    Typography: DM Sans (body) + Sora (headings)
    ============================================ */
 
+/* Category icon images (replaces emoji) */
+.category-icon-img {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  object-fit: cover;
+  border-radius: 12%;
+  vertical-align: middle;
+}
+.category-card__icon .category-icon-img {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 16px;
+}
+.page-header__icon .category-icon-img {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 12px;
+}
+.results-section__icon .category-icon-img {
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 8px;
+}
+.results-tabs__icon .category-icon-img {
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 6px;
+}
+
+/* Hidden vote count placeholder while voting is open */
+.leaderboard__votes--hidden {
+  opacity: 0.4;
+  font-style: italic;
+}
+
 /* --- CSS Custom Properties --- */
 :root {
   /* Colors */

@@ -5,11 +5,13 @@ export interface CandidateCardOptions {
   rank: number;
   hasVoted: boolean;
   votedCandidateId?: string;
+  showVoteCount?: boolean;
+  votingOpen?: boolean;
   onVote: (candidateId: string) => void;
 }
 
 export function createCandidateCard(options: CandidateCardOptions): HTMLElement {
-  const { candidate, rank, hasVoted, votedCandidateId, onVote } = options;
+  const { candidate, rank, hasVoted, votedCandidateId, onVote, showVoteCount = false, votingOpen = true } = options;
   const isThisVoted = votedCandidateId === candidate.id;
 
   const card = document.createElement('div');
@@ -34,6 +36,7 @@ export function createCandidateCard(options: CandidateCardOptions): HTMLElement 
     <div class="candidate-card__info">
       <h3 class="candidate-card__name">${candidate.name}</h3>
       <p class="candidate-card__bio">${candidate.bio}</p>
+      ${showVoteCount ? `
       <div class="candidate-card__stats">
         <span class="candidate-card__votes">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -42,17 +45,22 @@ export function createCandidateCard(options: CandidateCardOptions): HTMLElement 
           ${candidate.vote_count.toLocaleString()} votes
         </span>
       </div>
+      ` : ''}
       ${isThisVoted
         ? `<button class="candidate-card__btn candidate-card__btn--voted" disabled>
             <span>✓</span> Your Vote
           </button>`
-        : hasVoted
+        : !votingOpen
           ? `<button class="candidate-card__btn candidate-card__btn--disabled" disabled>
-              Vote Locked
+              Voting Closed
             </button>`
-          : `<button class="candidate-card__btn candidate-card__btn--vote" id="vote-btn-${candidate.id}">
-              <span>🗳️</span> Cast Vote
-            </button>`
+          : hasVoted
+            ? `<button class="candidate-card__btn candidate-card__btn--disabled" disabled>
+                Vote Locked
+              </button>`
+            : `<button class="candidate-card__btn candidate-card__btn--vote" id="vote-btn-${candidate.id}">
+                <span>🗳️</span> Cast Vote
+              </button>`
       }
     </div>
   `;

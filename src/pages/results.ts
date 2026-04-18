@@ -14,7 +14,10 @@ import {
   renderLeaderboardRow,
   type RankedCandidate,
 } from '../components/leaderboard-row';
-import { appendQuoteIfOpen } from '../components/results-quote';
+import { appendQuoteIfOpen, isVotingOpen } from '../components/results-quote';
+import { setMeta, siteUrl, eventYear } from '../seo';
+import { renderCategoryIcon } from '../components/category-icon';
+import { canViewResults } from '../ceremony';
 
 const TOP_N = 3;
 
@@ -25,15 +28,15 @@ interface CategoryGroup {
   totalCandidates: number;
 }
 
-function renderCategorySection(group: CategoryGroup, isActive: boolean, isMobileOpen: boolean): string {
+function renderCategorySection(group: CategoryGroup, isActive: boolean, isMobileOpen: boolean, showCounts: boolean): string {
   const { category, candidates, leaderVotes, totalCandidates } = group;
-  const icon = category.icon || '🏆';
+  const icon = renderCategoryIcon(category);
   const safeName = escapeHtml(category.name);
 
   const top = candidates.slice(0, TOP_N);
   const body = top.length === 0
     ? `<div class="results-empty">No candidates yet in this category.</div>`
-    : top.map(c => renderLeaderboardRow(c, leaderVotes)).join('');
+    : top.map(c => renderLeaderboardRow(c, leaderVotes, showCounts)).join('');
 
   const viewAll = totalCandidates > TOP_N
     ? `<a class="results-viewall" href="#/results/${encodeURIComponent(category.slug)}">View all ${totalCandidates} in ${safeName} →</a>`
@@ -81,7 +84,7 @@ function renderTabs(groups: CategoryGroup[], activeId: string): string {
           data-category-id="${g.category.id}"
           type="button"
         >
-          <span class="results-tabs__icon">${g.category.icon || '🏆'}</span>
+          <span class="results-tabs__icon">${renderCategoryIcon(g.category)}</span>
           <span class="results-tabs__label">${escapeHtml(g.category.name)}</span>
         </button>
       `).join('')}
@@ -122,6 +125,11 @@ function renderGlimpse(
 export async function renderResultsPage(container: HTMLElement) {
   showPageLoader(container);
 
+  if (!(await canViewResults())) {
+    navigate('/');
+    return;
+  }
+
   try {
     const user = await getCurrentUser();
     const [categories, settings, userVotes] = await Promise.all([
@@ -133,6 +141,25 @@ export async function renderResultsPage(container: HTMLElement) {
     const candidateLists = await Promise.all(
       categories.map(c => fetchCandidates(c.id))
     );
+
+    const year = eventYear(settings?.election_end);
+    const canonical = siteUrl('/#/results');
+    setMeta({
+      title: `Live Results — Junub Talent Awards ${year}`,
+      description: `Live per-category leaderboards for the Junub Talent Awards ${year}. See which Junubins are leading across art, dance, drama, and creative arts.`,
+      canonical,
+      ogType: 'website',
+      jsonLd: [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl('/') },
+            { '@type': 'ListItem', position: 2, name: 'Live Results', item: canonical },
+          ],
+        },
+      ],
+    });
 
     const groups: CategoryGroup[] = categories.map((category, i) => {
       const sorted = [...candidateLists[i]].sort((a, b) => b.vote_count - a.vote_count);
@@ -212,13 +239,14 @@ export async function renderResultsPage(container: HTMLElement) {
     tabsWrap.innerHTML = renderTabs(groups, defaultCategoryId);
     container.appendChild(tabsWrap);
 
+    const showCounts = !isVotingOpen(settings);
     const sectionsWrap = document.createElement('div');
     sectionsWrap.className = 'results-sections';
     sectionsWrap.innerHTML = groups
       .map(g => {
         const isActive = g.category.id === defaultCategoryId;
         const isMobileOpen = userVoteCategoryIds.has(g.category.id) || isActive;
-        return renderCategorySection(g, isActive, isMobileOpen);
+        return renderCategorySection(g, isActive, isMobileOpen, showCounts);
       })
       .join('');
     container.appendChild(sectionsWrap);

@@ -4,6 +4,8 @@ import type { User } from '@supabase/supabase-js';
 export type AuthChangeCallback = (user: User | null) => void;
 
 const listeners: AuthChangeCallback[] = [];
+let cachedUser: User | null = null;
+let initialSessionReady: Promise<void>;
 
 export function onAuthChange(callback: AuthChangeCallback) {
   listeners.push(callback);
@@ -14,17 +16,21 @@ export function onAuthChange(callback: AuthChangeCallback) {
 }
 
 function notifyListeners(user: User | null) {
+  cachedUser = user;
   listeners.forEach(cb => cb(user));
 }
 
-// Initialize auth state listener
+initialSessionReady = supabase.auth.getSession().then(({ data }) => {
+  cachedUser = data.session?.user ?? null;
+});
+
 supabase.auth.onAuthStateChange((_event, session) => {
   notifyListeners(session?.user ?? null);
 });
 
 export async function getCurrentUser(): Promise<User | null> {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user;
+  await initialSessionReady;
+  return cachedUser;
 }
 
 export async function signInWithGoogle() {

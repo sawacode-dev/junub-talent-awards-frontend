@@ -6,6 +6,7 @@ import { renderResultsPage } from './pages/results';
 import { renderResultsCategoryPage } from './pages/results-category';
 import { renderProfilePage } from './pages/profile';
 import { addRoute, startRouter } from './router';
+import { startSettingsRealtime } from './ceremony';
 
 async function initApp() {
   const app = document.querySelector<HTMLDivElement>('#app');
@@ -40,6 +41,9 @@ async function initApp() {
   addRoute('/results', () => renderResultsPage(main));
   addRoute('/results/:slug', (params) => renderResultsCategoryPage(main, params.slug));
   addRoute('/profile', () => renderProfilePage(main));
+
+  // Start realtime ceremony updates so reveal lands instantly during the live ceremony.
+  startSettingsRealtime();
 
   // Start router
   startRouter();

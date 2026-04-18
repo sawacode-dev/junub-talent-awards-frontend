@@ -1,5 +1,7 @@
-import { fetchCategories, fetchCandidates, fetchUserVotes } from '../api';
+import { fetchCategories, fetchCandidates, fetchSettings, fetchUserVotes } from '../api';
 import type { Category, Vote } from '../api';
+import { isVotingOpen } from '../components/results-quote';
+import { renderCategoryIcon } from '../components/category-icon';
 import { getCurrentUser, signInWithGoogle } from '../auth';
 import { showPageLoader } from '../components/loader';
 import { navigate } from '../router';
@@ -9,6 +11,7 @@ import {
   rankBadge,
   type RankedCandidate,
 } from '../components/leaderboard-row';
+import { setMeta, siteUrl } from '../seo';
 
 function relativeTime(iso: string): string {
   const then = new Date(iso).getTime();
@@ -42,7 +45,7 @@ interface ProfileGroup {
   rows: VoteRow[];
 }
 
-function renderVoteRow(row: VoteRow, categorySlug: string): string {
+function renderVoteRow(row: VoteRow, categorySlug: string, showCounts: boolean): string {
   const { vote, candidate } = row;
   const fb = fallbackAvatarUrl(candidate.name, 200);
   const safeName = escapeHtml(candidate.name);
@@ -55,13 +58,13 @@ function renderVoteRow(row: VoteRow, categorySlug: string): string {
       </div>
       <div class="profile-vote__meta">
         <span class="profile-vote__rank">${rankBadge(candidate.rankInCategory)}</span>
-        <span class="profile-vote__votes">${candidate.vote_count.toLocaleString()} votes</span>
+        ${showCounts ? `<span class="profile-vote__votes">${candidate.vote_count.toLocaleString()} votes</span>` : ''}
       </div>
     </a>
   `;
 }
 
-function renderGroup(group: ProfileGroup, isOpen: boolean): string {
+function renderGroup(group: ProfileGroup, isOpen: boolean, showCounts: boolean): string {
   const { category, rows } = group;
   const safeName = escapeHtml(category.name);
   return `
@@ -72,7 +75,7 @@ function renderGroup(group: ProfileGroup, isOpen: boolean): string {
         aria-expanded="${isOpen ? 'true' : 'false'}"
         aria-controls="profile-body-${category.id}"
       >
-        <span class="results-section__icon">${category.icon || '🏆'}</span>
+        <span class="results-section__icon">${renderCategoryIcon(category)}</span>
         <span class="results-section__title">${safeName}</span>
         <span class="results-section__count">${rows.length}</span>
         <a class="results-section__link" href="#/results/${encodeURIComponent(category.slug)}" onclick="event.stopPropagation()">View leaderboard →</a>
@@ -85,7 +88,7 @@ function renderGroup(group: ProfileGroup, isOpen: boolean): string {
         id="profile-body-${category.id}"
       >
         <div class="profile-votes-list">
-          ${rows.map(r => renderVoteRow(r, category.slug)).join('')}
+          ${rows.map(r => renderVoteRow(r, category.slug, showCounts)).join('')}
         </div>
       </div>
     </section>
@@ -93,6 +96,13 @@ function renderGroup(group: ProfileGroup, isOpen: boolean): string {
 }
 
 export async function renderProfilePage(container: HTMLElement) {
+  setMeta({
+    title: 'Your Profile — Junub Talent Awards',
+    description: 'Your votes and profile on the Junub Talent Awards platform.',
+    canonical: siteUrl('/#/profile'),
+    noindex: true,
+  });
+
   showPageLoader(container);
 
   try {
@@ -116,10 +126,12 @@ export async function renderProfilePage(container: HTMLElement) {
       return;
     }
 
-    const [categories, userVotes] = await Promise.all([
+    const [categories, userVotes, settings] = await Promise.all([
       fetchCategories(),
       fetchUserVotes(),
+      fetchSettings(),
     ]);
+    const showCounts = !isVotingOpen(settings);
 
     const votedCategoryIds = new Set(userVotes.map(v => v.category_id));
     const relevantCategories = categories.filter(c => votedCategoryIds.has(c.id));
@@ -197,7 +209,7 @@ export async function renderProfilePage(container: HTMLElement) {
 
     const sectionsWrap = document.createElement('div');
     sectionsWrap.className = 'results-sections';
-    sectionsWrap.innerHTML = groups.map((g, i) => renderGroup(g, i === 0)).join('');
+    sectionsWrap.innerHTML = groups.map((g, i) => renderGroup(g, i === 0, showCounts)).join('');
     section.appendChild(sectionsWrap);
     container.appendChild(section);
 

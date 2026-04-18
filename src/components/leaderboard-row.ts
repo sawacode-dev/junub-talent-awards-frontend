@@ -21,10 +21,17 @@ export function fallbackAvatarUrl(name: string, size = 200): string {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=7c3aed&color=fff&size=${size}`;
 }
 
-export function renderLeaderboardRow(c: RankedCandidate, leaderVotes: number): string {
+export function renderLeaderboardRow(
+  c: RankedCandidate,
+  leaderVotes: number,
+  showCounts = true,
+): string {
   const pct = leaderVotes > 0 ? (c.vote_count / leaderVotes) * 100 : 0;
   const fb = fallbackAvatarUrl(c.name, 200);
   const safeName = escapeHtml(c.name);
+  const votesCell = showCounts
+    ? `<span class="leaderboard__votes">${c.vote_count.toLocaleString()}</span>`
+    : `<span class="leaderboard__votes leaderboard__votes--hidden" aria-label="Votes hidden until results">—</span>`;
   return `
     <div class="leaderboard__row ${c.rankInCategory <= 3 ? 'leaderboard__row--top' : ''}" style="animation-delay: ${(c.rankInCategory - 1) * 0.04}s">
       <span class="leaderboard__rank">${rankBadge(c.rankInCategory)}</span>
@@ -35,7 +42,7 @@ export function renderLeaderboardRow(c: RankedCandidate, leaderVotes: number): s
           <div class="leaderboard__bar" style="width: ${pct}%"></div>
         </div>
       </div>
-      <span class="leaderboard__votes">${c.vote_count.toLocaleString()}</span>
+      ${votesCell}
     </div>
   `;
 }

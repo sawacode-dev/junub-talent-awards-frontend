@@ -2,6 +2,9 @@ import { fetchCategories, fetchGlobalStats, fetchSettings } from '../api';
 import type { Category } from '../api';
 import { showPageLoader } from '../components/loader';
 import { navigate } from '../router';
+import { setMeta, siteUrl, eventYear } from '../seo';
+import { renderCategoryIcon } from '../components/category-icon';
+import { deriveCeremonyState } from '../ceremony';
 
 export async function renderHomePage(container: HTMLElement) {
   showPageLoader(container);
@@ -12,30 +15,65 @@ export async function renderHomePage(container: HTMLElement) {
       fetchGlobalStats(),
       fetchSettings()
     ]);
+
+    const year = eventYear(settings?.election_end);
+    const eventJsonLd: Record<string, unknown> = {
+      '@context': 'https://schema.org',
+      '@type': 'Event',
+      name: `Junub Talent Awards ${year}`,
+      description: 'The Junub Talent Awards celebrate outstanding South Sudanese (Junubins) talent in art, dance, drama, and creative arts.',
+      eventStatus: 'https://schema.org/EventScheduled',
+      eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
+      url: siteUrl('/'),
+      image: siteUrl('/og-image.png'),
+      location: {
+        '@type': 'VirtualLocation',
+        url: siteUrl('/'),
+      },
+      organizer: {
+        '@type': 'Organization',
+        name: 'Junub Talent Awards',
+        url: siteUrl('/'),
+      },
+    };
+    if (settings?.election_start) eventJsonLd.startDate = settings.election_start;
+    if (settings?.election_end) eventJsonLd.endDate = settings.election_end;
+
+    setMeta({
+      title: `Junub Talent Awards ${year} | Celebrating South Sudanese Talent`,
+      description: 'The Junub Talent Awards (Junub means "south" in Sudani Arabic) celebrate outstanding South Sudanese talent in art, dance, drama, and creative arts. Cast your vote for the Junubins who inspire you.',
+      canonical: siteUrl('/'),
+      ogType: 'website',
+      jsonLd: [eventJsonLd],
+    });
+
     container.innerHTML = '';
 
     // Hero section
     const hero = document.createElement('section');
     hero.className = 'hero';
     
-    // Countdown logic
+    const ceremony = deriveCeremonyState(settings);
     let countdownHtml = '';
-    if (settings && settings.election_end) {
-      const endDate = new Date(settings.election_end);
-      if (endDate > new Date()) {
-        countdownHtml = `
-          <div class="hero__countdown" id="hero-countdown">
-            <span class="hero__countdown-label">Voting Closes In:</span>
-            <span class="hero__countdown-value" id="deadline-timer">--:--:--</span>
-          </div>
-        `;
-      } else {
-        countdownHtml = `
-          <div class="hero__countdown hero__countdown--ended">
-            <span class="hero__countdown-label">Voting has ended</span>
-          </div>
-        `;
-      }
+    if (ceremony.votingClosed && !ceremony.resultsRevealed) {
+      countdownHtml = `
+        <div class="hero__countdown hero__countdown--ended">
+          <span class="hero__countdown-label">🎤 Winners will be revealed at the awards ceremony</span>
+        </div>
+      `;
+    } else if (ceremony.votingClosed && ceremony.resultsRevealed) {
+      countdownHtml = `
+        <div class="hero__countdown hero__countdown--ended">
+          <span class="hero__countdown-label">🏆 Results are live — see the leaderboard</span>
+        </div>
+      `;
+    } else if (settings && settings.election_end) {
+      countdownHtml = `
+        <div class="hero__countdown" id="hero-countdown">
+          <span class="hero__countdown-label">Voting Closes In:</span>
+          <span class="hero__countdown-value" id="deadline-timer">--:--:--</span>
+        </div>
+      `;
     }
 
     hero.innerHTML = `
@@ -109,7 +147,7 @@ export async function renderHomePage(container: HTMLElement) {
       card.id = `category-${cat.slug}`;
       card.style.animationDelay = `${index * 0.1}s`;
       card.innerHTML = `
-        <div class="category-card__icon">${cat.icon || '🏆'}</div>
+        <div class="category-card__icon">${renderCategoryIcon(cat)}</div>
         <h3 class="category-card__name">${cat.name}</h3>
         <p class="category-card__desc">${cat.description || ''}</p>
         <span class="category-card__arrow">→</span>
