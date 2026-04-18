@@ -22,9 +22,10 @@ export function deriveCeremonyState(settings: Settings | null): CeremonyState {
   const start = settings?.election_start ? new Date(settings.election_start).getTime() : null;
   const end = settings?.election_end ? new Date(settings.election_end).getTime() : null;
 
+  const paused = settings?.is_paused ?? false;
   const votingNotStarted = start !== null && now < start;
-  const votingOpen = (start === null || now >= start) && (end === null || now <= end);
-  const votingClosed = end !== null && now > end;
+  const votingOpen = !paused && (start === null || now >= start) && (end === null || now <= end);
+  const votingClosed = paused || (end !== null && now > end);
 
   return {
     votingNotStarted,

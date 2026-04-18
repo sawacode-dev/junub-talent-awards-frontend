@@ -67,7 +67,6 @@ function renderHeader(header: HTMLElement, user: User | null, showResultsLink: b
         </span>
       </a>
       <nav class="header__nav">
-        <a href="/" class="header__nav-link" id="nav-home">Home</a>
         ${showResultsLink ? `<a href="/results" class="header__nav-link" id="nav-results">Results</a>` : ''}
       </nav>
       <div class="header__auth">
