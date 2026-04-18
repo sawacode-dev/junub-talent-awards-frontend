@@ -276,6 +276,7 @@ button {
   inset: 0;
   z-index: 99;
   background: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
 }
 
 .mobile-profile-overlay--visible {
