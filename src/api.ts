@@ -74,6 +74,20 @@ export async function fetchUserVoteForCategory(categoryId: string): Promise<Vote
   return data;
 }
 
+export async function fetchUserVotes(): Promise<Vote[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from('votes')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('voted_at', { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function castVote(candidateId: string, categoryId: string): Promise<VoteResult> {
   const { data, error } = await supabase.rpc('cast_vote', {
     p_candidate_id: candidateId,
