@@ -16,9 +16,7 @@ export function createCandidateCard(options: CandidateCardOptions): HTMLElement 
   card.className = `candidate-card ${isThisVoted ? 'candidate-card--voted' : ''} ${rank <= 3 ? 'candidate-card--top' : ''}`;
   card.id = `candidate-${candidate.id}`;
 
-  const rankBadge = rank <= 3
-    ? `<span class="candidate-card__rank candidate-card__rank--${rank}">${rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}</span>`
-    : `<span class="candidate-card__rank">#${rank}</span>`;
+  const rankBadge = `<span class="candidate-card__rank">#${rank}</span>`;
 
   const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(candidate.name)}&background=7c3aed&color=fff&size=400`;
   const initialSrc = candidate.image_url || fallbackAvatar;
